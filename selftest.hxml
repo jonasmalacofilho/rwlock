@@ -1,0 +1,7 @@
+-neko selftest.n
+-main TestReadWriteLock
+
+-cp src
+-cp test
+
+-D READ_WRITE_LOCK_SUPER
