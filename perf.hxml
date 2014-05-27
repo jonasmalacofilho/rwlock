@@ -1,0 +1,5 @@
+-neko perf.n
+-main Perf
+
+-cp src
+-cp test
