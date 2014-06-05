@@ -2,9 +2,9 @@ import Math.random;
 import elebeta.vm.RWLock;
 
 #if neko
-import neko.vm.Thread;
+import neko.vm.*;
 #elseif cpp
-import cpp.vm.Thread;
+import cpp.vm.*;
 #end
 
 class Test {
@@ -45,7 +45,30 @@ class Test {
         spawnHelpers();
 
         lock = new RWLock(lockCap, 1., function (stack, time) null);
+        lock.prepareWrite();
         spawnWorkers();
+        lock.releaseWrite();
+    }
+
+    public
+    function getCounts() {
+        function sum(it : Iterable<Float>) {
+            return Lambda.fold(it, function (x, acc) return acc + x, 0.);
+        }
+
+        var reads = sum([for (worker in readers) worker.getCount()]);
+        var writes = sum([for (worker in writers) worker.getCount()]);
+        return [reads, writes];
+    }
+
+    public
+    function kill() {
+        var order = new KillOrder(noReaders + noWriters);
+        for (reader in readers)
+            reader.kill(order);
+        for (writer in writers)
+            writer.kill(order);
+        order.wait();
     }
 
     function spawnOneWorker(prob, dur, write) {
@@ -60,26 +83,7 @@ class Test {
     }
 
     function spawnHelpers() {
-        Thread.create(countPrinter);
-    }
-
-    function countPrinter() {
-
-        function sum(it : Iterable<Float>)
-            return Lambda.fold(it, function (x, acc) return acc + x, 0.);
-
-        var step = 0;
-        var epoch = haxe.Timer.stamp();
-
-        var timer = new Timer();
-        while (true) {
-            var elapsed = Math.round(1e3*(haxe.Timer.stamp() - epoch));
-            var r = "reads at: " + sum([for (worker in readers) worker.getCount()]);
-            var w = "writes at: " + sum([for (worker in writers) worker.getCount()]);
-            Sys.print('STEP ${step++} (after ${elapsed} ms):\n\t$r\n\t$w\n');
-            timer.wait(1);
-        }
-
+        // pass
     }
 
 }
@@ -92,6 +96,7 @@ class Worker {
     var write : Bool;
     var opCnt = 0;
     var timer = new Timer();
+    var killOrder:KillOrder;
 
     public
     function new(lock, prob, time, write) {
@@ -103,15 +108,22 @@ class Worker {
 
     public
     function run() {
-        while (true) {
+        while (killOrder == null) {
             var t = (random() <= prob) ? op() : 0.;
             timer.wait(t/prob - t);  // prob = time/total_time
         }
+        killOrder.dying();
+        killOrder = null;
     }
 
     public
     function getCount() {
         return opCnt;
+    }
+
+    public
+    function kill(semaphore) {
+        killOrder = semaphore;
     }
 
     function op() {
@@ -136,3 +148,25 @@ class Worker {
 
 }
 
+class KillOrder {
+
+    var lock = new Lock();
+    var n:Int;
+
+    public
+    function new(n:Int) {
+        this.n = n;
+    }
+
+    public
+    function dying() {
+        lock.release();
+    }
+
+    public
+    function wait() {
+        for (i in 0...n)
+            lock.wait();
+    }
+
+}

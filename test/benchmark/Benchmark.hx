@@ -2,13 +2,18 @@ class Benchmark {
 
     static function main() {
         var args = Sys.args();
-        var lockCap = Std.parseInt(args[0]);
-        var noReaders = Std.parseInt(args[1]);
-        var noWriters = Std.parseInt(args[2]);
-        var x = new Test(lockCap, noReaders, noWriters, .5, .5, .05, .2);
-        x.run();
+        var noReaders = 20;
+        var noWriters = 2;
         var timer = new Timer();
-        timer.wait();
+        for (lockCap in 1...23) {
+            var test = new Test(lockCap, noReaders, noWriters, 1, 1, .01, .02);
+            test.run();
+            timer.wait(5);
+            switch (test.getCounts()) {
+                case [reads, writes]: trace('Cap $lockCap: $reads $writes ${reads+writes}');
+            }
+            test.kill();
+        }
     }
 
 }
