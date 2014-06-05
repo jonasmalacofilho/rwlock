@@ -2,18 +2,18 @@ Copyright and license
 =====================
 
 
-Copyright 2013--2014 _[The Contributors](The Contributors)_
+Copyright 2013--2014 _[The Contributors](#the-contributors)_
 
-Licensed under the [The BSD 3-clause license](The BSD 3-clause license)
+Licensed under the [The BSD 3-clause license](#the-bsd-3-clause-license)
 
 
-The Contributors  <a name="The Contributors"></a>
+The Contributors
 ----------------
 
     Jonas Malaco Filho
 
 
-The BSD 3-clause license  <a name="The BSD 3-clause license"></a>
+The BSD 3-clause license
 ------------------------
 
 Redistribution and use in source and binary forms, with or without modification,
