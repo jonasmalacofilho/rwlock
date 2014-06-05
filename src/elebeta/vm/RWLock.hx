@@ -2,21 +2,17 @@ package elebeta.vm;
 
 import haxe.CallStack.StackItem;
 
-private typedef Lock  = #if neko
-					    neko.vm.Lock
-					    #elseif cpp
-					    cpp.vm.Lock
-					    #else
-					    {}
-					    #end
+#if neko
+import neko.vm.Lock;
+#elseif cpp
+import cpp.vm.Lock;
+#end
 
-private typedef Mutex = #if neko
-					    neko.vm.Mutex
-					    #elseif cpp
-					    cpp.vm.Mutex
-					    #else
-					    {}
-					    #end
+#if neko
+import neko.vm.Mutex;
+#elseif cpp
+import cpp.vm.Mutex;
+#end
 
 /**
 	Readers-writer lock for Haxe/Neko.

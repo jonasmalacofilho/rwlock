@@ -1,5 +1,5 @@
-Readers--writer lock
-====================
+Readers-writer lock
+===================
 
 
 API
