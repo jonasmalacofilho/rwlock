@@ -1,0 +1,6 @@
+-neko bin/unittests.n
+-main unittests.elebeta.vm.TestRWLock
+-cp ../src
+-cp unittests
+-D RWLOCK_SUPER
+-cmd neko bin/unittests.n

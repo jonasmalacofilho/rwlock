@@ -1,7 +1,9 @@
-import sys.vm.ReadWriteLock;
+package unittests.elebeta.vm;
+
+import elebeta.vm.RWLock;
 import neko.vm.Thread;
 
-class TestReadWriteLock {
+class TestRWLock {
 
 	static function status( msg:String ) {
 		Sys.stdout().writeString( "\r" + msg );
@@ -17,7 +19,7 @@ class TestReadWriteLock {
 			Sys.stdout().writeString( "\n..." + msg + "\n" );
 
 		status( "Creating a lock..." );
-		var lk = new ReadWriteLock( 2, 1.
+		var lk = new RWLock( 2, 1.
 		, function ( cs, ts ) {
 			if ( ts < 3.5 )
 				statusln( "...alread waited "+ts+" seconds to acquire this resource" );
@@ -57,7 +59,7 @@ private class BasicTest extends haxe.unit.TestCase {
 		var calls = 0;
 		var f = function () calls++;
 
-		var lk = new ReadWriteLock( 1 );
+		var lk = new RWLock( 1 );
 		assertTrue( lk.read( f, 0 ) );
 		assertEquals( 1, calls );
 		/* internal */ lk.acquire();
@@ -66,7 +68,7 @@ private class BasicTest extends haxe.unit.TestCase {
 		/* internal */ lk.release();
 
 		calls = 0;
-		lk = new ReadWriteLock( 2 );
+		lk = new RWLock( 2 );
 		assertTrue( lk.read( f, 0 ) );
 		assertEquals( 1, calls );
 		/* internal */ lk.acquire();
@@ -82,7 +84,7 @@ private class BasicTest extends haxe.unit.TestCase {
 		var calls = 0;
 		var f = function () calls++;
 
-		var lk = new ReadWriteLock( 1 );
+		var lk = new RWLock( 1 );
 		assertTrue( lk.write( f, 0 ) );
 		assertEquals( 1, calls );
 		/* internal */ lk.acquire();
@@ -92,7 +94,7 @@ private class BasicTest extends haxe.unit.TestCase {
 	}
 
 	public function testLowerLevelRead() {
-		var lk = new ReadWriteLock( 2 );
+		var lk = new RWLock( 2 );
 		assertTrue( lk.prepareRead( 0 ) );
 		assertTrue( lk.prepareRead( 0 ) );
 		assertFalse( lk.prepareRead( 0 ) );
@@ -104,7 +106,7 @@ private class BasicTest extends haxe.unit.TestCase {
 	}
 
 	public function testLowerLevelWrite() {
-		var lk = new ReadWriteLock( 2 );
+		var lk = new RWLock( 2 );
 		assertTrue( lk.prepareWrite( 0 ) );
 		assertFalse( lk.prepareWrite( 0 ) );
 		assertFalse( lk.prepareRead( 0 ) );
@@ -115,7 +117,7 @@ private class BasicTest extends haxe.unit.TestCase {
 	}
 
 	public function testLowerLevelReadThenWrite() {
-		var lk = new ReadWriteLock( 2 );
+		var lk = new RWLock( 2 );
 		assertTrue( lk.prepareRead( 0 ) );
 		assertTrue( lk.prepareRead( 0 ) );
 		lk.release();

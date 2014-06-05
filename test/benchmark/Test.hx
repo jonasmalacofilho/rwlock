@@ -1,13 +1,17 @@
-import sys.vm.ReadWriteLock;
 import Math.random;
+import elebeta.vm.RWLock;
+
+#if neko
 import neko.vm.Thread;
-import neko.vm.Lock;
+#elseif cpp
+import cpp.vm.Thread;
+#end
 
 class Test {
 
     // THE LOCK!
     var lockCap : Int;
-    var lock : ReadWriteLock;
+    var lock : RWLock;
 
     // the scenario
     var noReaders : Int;
@@ -40,7 +44,7 @@ class Test {
         // monitoring
         spawnHelpers();
 
-        lock = new ReadWriteLock(lockCap, 1., function (stack, time) null);
+        lock = new RWLock(lockCap, 1., function (stack, time) null);
         spawnWorkers();
     }
 
@@ -80,24 +84,9 @@ class Test {
 
 }
 
-class Perf {
-
-    static function main() {
-        var args = Sys.args();
-        var lockCap = Std.parseInt(args[0]);
-        var noReaders = Std.parseInt(args[1]);
-        var noWriters = Std.parseInt(args[2]);
-        var x = new Test(lockCap, noReaders, noWriters, .5, .5, .05, .2);
-        x.run();
-        var timer = new Timer();
-        timer.wait();
-    }
-
-}
-
 class Worker {
 
-    var lock : ReadWriteLock;
+    var lock : RWLock;
     var prob : Float;
     var time : Float;
     var write : Bool;
@@ -147,14 +136,3 @@ class Worker {
 
 }
 
-@:publicFields
-class Timer {
-
-    var aux = new Lock();
-
-    // t in ms
-    function wait(?t : Null<Float>) {
-        aux.wait(t);
-    }
-
-}

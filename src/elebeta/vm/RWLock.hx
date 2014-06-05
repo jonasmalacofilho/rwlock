@@ -1,15 +1,27 @@
-package sys.vm;
+package elebeta.vm;
 
 import haxe.CallStack.StackItem;
 
-/**
-	A read & write lock for Haxe/Neko.
-	Copyright 2013, Jonas Malaco Filho.
+private typedef Lock  = #if neko
+					    neko.vm.Lock
+					    #elseif cpp
+					    cpp.vm.Lock
+					    #else
+					    {}
+					    #end
 
-	Based on neko locks (semaphores) and mutexes.
-	Should be easily portable to other multi threaded targets.
+private typedef Mutex = #if neko
+					    neko.vm.Mutex
+					    #elseif cpp
+					    cpp.vm.Mutex
+					    #else
+					    {}
+					    #end
+
+/**
+	Readers-writer lock for Haxe/Neko.
 **/
-class ReadWriteLock {
+class RWLock {
 	
 	/**
 		Maximum number of allowed simultaneously users.
@@ -40,8 +52,8 @@ class ReadWriteLock {
 		maxReaders = _maxReaders;
 		waitLogTimeout = _waitLogTimeout != null ? _waitLogTimeout : 1.;
 		if ( _waitLogger != null ) waitLogger = _waitLogger;		
-		semaphore = new neko.vm.Lock();
-		mutex = new neko.vm.Mutex();
+		semaphore = new Lock();
+		mutex = new Mutex();
 		releaseAll();
 	}
 
@@ -160,7 +172,7 @@ class ReadWriteLock {
 
 	/**
 		INTERNAL (LOWEST LEVEL) API.
-		To expose these basic methods the READ_WRITE_LOCK_SUPER directive should
+		To expose these basic methods the RWLOCK_SUPER directive should
 		be defined at compilation.
 	**/
 
@@ -181,18 +193,18 @@ class ReadWriteLock {
 	/**
 		Semaphore, used mainly for controlling readers.
 	**/
-	var semaphore:neko.vm.Lock;
+	var semaphore:Lock;
 
 	/**
 		Mutex, used to prevent writer thread deadlock.
 	**/
-	var mutex:neko.vm.Mutex;
+	var mutex:Mutex;
 
 	/**
 		Releases/frees one resource unit.
-		Only available if READ_WRITE_LOCK_SUPER has been defined.
+		Only available if RWLOCK_SUPER has been defined.
 	**/
-	#if READ_WRITE_LOCK_SUPER public #end inline function release():Void {
+	#if RWLOCK_SUPER public #end inline function release():Void {
 		semaphore.release();
 	}
 
@@ -200,14 +212,14 @@ class ReadWriteLock {
 		Tries do acquire one resource unit, waiting up to [wait] seconds. If no
 		timeout has been set, [waitLogger] is called every [waitLogTimeout]
 		seconds.
-		Only available if READ_WRITE_LOCK_SUPER has been defined.
+		Only available if RWLOCK_SUPER has been defined.
 
 		Parameters:
 			[wait]:  Finite timeout or [null], that is, no timeout.
 		Returns:
 			[true] if the resource was successfully acquired.
 	**/
-	#if READ_WRITE_LOCK_SUPER public #end inline function acquire( ?wait:Null<Float> ):Bool {
+	#if RWLOCK_SUPER public #end inline function acquire( ?wait:Null<Float> ):Bool {
 		if ( wait != null )
 			return semaphore.wait( wait );
 		else {
@@ -220,9 +232,9 @@ class ReadWriteLock {
 
 	/**
 		Releases all resources.
-		Only available if READ_WRITE_LOCK_SUPER has been defined.
+		Only available if RWLOCK_SUPER has been defined.
 	**/
-	#if READ_WRITE_LOCK_SUPER public #end function releaseAll( ?owned=0 ) {
+	#if RWLOCK_SUPER public #end function releaseAll( ?owned=0 ) {
 		for ( i in 0...( maxReaders - owned ) )
 			release();
 	}
@@ -231,7 +243,7 @@ class ReadWriteLock {
 		Tries to acquire all resources, waiting up to [wait] seconds. To prevent
 		deadlocks (when to threads try to simultaneously acquire all resources),
 		this operation is encapsulated by a mutex.
-		Only available if READ_WRITE_LOCK_SUPER has been defined.
+		Only available if RWLOCK_SUPER has been defined.
 
 		Parameters:
 			?[wait]:   Finite timeout or [null], that is, no timeout.
@@ -240,7 +252,7 @@ class ReadWriteLock {
 		Returns:
 			[true] if all resources were successfully acquired.
 	**/
-	#if READ_WRITE_LOCK_SUPER public #end function acquireAll( ?wait:Null<Float>
+	#if RWLOCK_SUPER public #end function acquireAll( ?wait:Null<Float>
 	, ?owned=0 ):Bool {
 		// remaining timeout/wait
 		var timeout = wait;

@@ -1,0 +1,5 @@
+-neko bin/benchmark.n
+-main Benchmark
+-cp ../src
+-cp benchmark
+-cmd neko bin/benchmark.n
