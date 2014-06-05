@@ -3,15 +3,9 @@ package elebeta.vm;
 import haxe.CallStack.StackItem;
 
 #if neko
-import neko.vm.Lock;
+import neko.vm.*;
 #elseif cpp
-import cpp.vm.Lock;
-#end
-
-#if neko
-import neko.vm.Mutex;
-#elseif cpp
-import cpp.vm.Mutex;
+import cpp.vm.*;
 #end
 
 /**
