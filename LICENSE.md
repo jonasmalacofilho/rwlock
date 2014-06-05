@@ -2,9 +2,9 @@ Copyright and license
 =====================
 
 
-Copyright 2013-2014 [The Contributors](#the-contributors)
+Copyright 2013-2014 _[The Contributors](#the-contributors)_.
 
-Licensed under the [The BSD 3-clause license](#the-bsd-3-clause-license)
+Licensed under the [The BSD 3-clause license](#the-bsd-3-clause-license).
 
 
 The contributors
