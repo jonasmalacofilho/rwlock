@@ -240,8 +240,12 @@ class RWLock {
 
 	/**
 		Tries to acquire all resources, waiting up to [wait] seconds. To prevent
-		deadlocks (when to threads try to simultaneously acquire all resources),
+		deadlocks (when two threads try to simultaneously acquire all resources),
 		this operation is encapsulated by a mutex.
+
+		If `owned` is not null/zero and there is another pending write (the mutex
+		can't be acquired right now), the function immediately return `false`.
+
 		Only available if RWLOCK_SUPER has been defined.
 
 		Parameters:
