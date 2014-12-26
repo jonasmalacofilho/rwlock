@@ -24,7 +24,8 @@ class RWLock {
 	public var waitLogTimeout( default, null ):Float;
 
 	/**
-		Creates a read/write lock with [_maxReaders] simultaneous users.
+		Creates an unlocked read/write lock with [_maxReaders] simultaneous users.
+
 		Params:
 			[_maxReaders]:       maximum number of allowed simultaneously users.
 			?[_waitLogTimeout]:  time in seconds before logging starvation of
@@ -142,9 +143,17 @@ class RWLock {
 	}
 
 	/**
-		Converts a read into a write operation;
-		Prepares for writing but only acquiring (all - 1) resources units,
-		since one should already be owned by the calling method.
+		Attempts to convert a read into a write operation.
+		
+		If there is another write pending, the function immediately
+		returns and the caller is expected to: (a) release the read
+		lock (to flush pending writes); (b) acquire a write lock; and
+		(c) recheck if its hypothesis on the state of the protected
+		resource still hold.
+
+		This function prepares the resource for writing by acquiring
+		(all - 1) units, since one should already be owned by the
+		calling method.
 
 		Params:
 			?[wait]:  timeout for acquiring the resource.
@@ -247,7 +256,15 @@ class RWLock {
 		// remaining timeout/wait
 		var timeout = wait;
 		// acquire the anti-deadlock mutex
-		mutex.acquire();
+		if (owned > 0) {
+			// in this case we can't block, otherwise the other
+			// pending write will never succeed and we will deadlock
+			if (!mutex.tryAcquire())
+				return false;
+		}
+		else {
+			mutex.acquire();
+		}
 		for ( i in 0...( maxReaders - owned ) ) {
 			var t0 = timestamp();
 			// try to acquire one resource

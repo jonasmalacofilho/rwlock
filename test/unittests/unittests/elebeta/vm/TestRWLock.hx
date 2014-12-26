@@ -145,6 +145,9 @@ private class ThreadedTest extends haxe.unit.TestCase {
 		t2.sendMessage( Thread.current() );
 		t3 = Thread.create( worker );
 		t3.sendMessage( Thread.current() );
+		Thread.readMessage( true );
+		Thread.readMessage( true );
+		Thread.readMessage( true );
 	}
 
 	override public function tearDown() {
@@ -157,23 +160,53 @@ private class ThreadedTest extends haxe.unit.TestCase {
 	}
 
 	function worker() {
-		var parent:Thread = Thread.readMessage( true );
+		var ctx = {
+			parent : Thread.readMessage( true )
+		};
+		ctx.parent.sendMessage( true );
 		while ( true ) {
 			var command:Command = Thread.readMessage( true );
 			switch ( command ) {
-				case F( f ): f();
+				case F( f ): f( ctx );
 				case Retire:
-					parent.sendMessage( true );
+					ctx.parent.sendMessage( true );
 					return;
 			}
 		}
 	}
 
 	// some multithreaded tests should go here
+	function testConvertToWriting() {
+		var lk = new RWLock(2);
+
+		// start a read op
+		t1.sendMessage(F( function (ctx) ctx.parent.sendMessage(lk.prepareRead(0)) ));
+		assertTrue(Thread.readMessage(true));
+
+		// try to write – should block for some time
+		t2.sendMessage(F( function (ctx) ctx.parent.sendMessage({ val : lk.prepareWrite(3), tid : 2 }) ));
+
+		// try converting read -> write; should fail
+		// (because the is a pending write request from t2)
+		t1.sendMessage(F( function (ctx) ctx.parent.sendMessage({ val : lk.convertToWriting(0), tid : 1 }) ));
+		var msg = Thread.readMessage(true);
+		assertEquals(1, msg.tid);
+		assertFalse(msg.val);
+
+		// cleanup
+		var msg = Thread.readMessage(true);
+		assertEquals(2, msg.tid);
+		assertFalse(msg.val);
+		lk.releaseRead();  // acquired by t1
+	}
 
 }
 
+private typedef Ctx = {
+	parent:Thread
+}
+
 private enum Command {
-	F( f:Void->Void );
+	F( f:Ctx->Void );
 	Retire;
 }
